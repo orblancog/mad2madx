@@ -1,0 +1,117 @@
+#! /usr/bin/env python
+
+import os
+import sys
+import re
+import string
+import textwrap
+from math import cos, sin, pi
+
+def multipoles(charact):
+    
+    normal = [0,0,0,0,0,0,0,0,0,0]
+    skew = [0,0,0,0,0,0,0,0,0,0]
+    
+    kl = [0,0,0,0,0,0,0,0,0,0]
+    t  = [0,0,0,0,0,0,0,0,0,0]
+
+    app = 0
+    aux1 = charact.strip(';')
+    #aux2 = string.join(aux1,'')
+    
+    ssline = string.split(aux1,',')
+    #print ssline
+    for i in range(1,len(ssline)):
+        if ssline[i] != '':
+            
+            part  = string.split(ssline[i],'=')
+            
+            if not("APERTURE" in part[0]):
+                n = re.sub('\D','',part[0])
+                w = re.sub('[^kKtT]','',part[0])
+                #print len(part), w, n, part , part[1]
+
+                if w.upper() == 'K':
+                    kl[int(n)] = float(part[1])
+                if w.upper() == 'T':
+                    if part[1] != '':
+                        t[int(n)]  = float(part[1])
+                    else:
+                        t[int(n)]  = float(pi/(2*int(n)+2))
+                    #print t[int(n)]*180/pi
+            else:
+                app = 1
+                auxapp = ssline[i]
+                
+    #Calculate components
+    for i in range(len(normal)):
+        normal[i] = (cos((i+1)*0.5*t[i]) - sin((i+1)*0.5*t[i]))*kl[i]
+        skew[i]   = (cos((i+1)*0.5*t[i]) + sin((i+1)*0.5*t[i]))*kl[i]
+    #print normal
+    #print skew
+    #create line
+    
+    outl = ssline[0]+", LRAD=0, TILT=0, KNL:={"+','.join(map(str,normal))+"}"+\
+    ", KSL:={"+','.join(map(str,normal))+"};"
+    if app == 0:
+        outl = ssline[0]+", LRAD=0, TILT=0, KNL:={"+','.join(map(str,normal))+"}"+\
+        ", KSL:={"+','.join(map(str,normal))+"};"
+    if app == 1:
+        outl = ssline[0]+", LRAD=0, TILT=0, KNL:={"+','.join(map(str,normal))+"}"+\
+        ", KSL:={"+','.join(map(str,normal))+"}, "+auxapp+";"
+    return outl
+
+
+filename = sys.argv[1]
+
+lines = []
+fileh = open(filename,'r')
+for lin in fileh:
+    lines.append(lin)
+    #print lin
+fileh.close()
+
+tline = []
+auxslin = ''
+keeplines = 0
+for lin in lines:
+    slin = lin.strip(None)
+    if len(slin) != 0:
+        if '!' in slin:
+            #sclin = slin + '\n'
+            tline.append(string.join(slin,''))
+        else:
+            if slin[-1] == '&':
+                sslin = slin.strip('&')
+                keeplines = 1
+                auxslin = auxslin + sslin
+            else:
+                keeplines = 0
+                auxslin = auxslin + slin
+            if keeplines == 0:
+                #print auxslin
+            #else:
+                auxslin = auxslin + ";"
+                #print len(auxslin)
+                tline.append(string.join(auxslin,''))
+                auxslin = ''
+                #keeplines = 0
+
+fline = []
+for line in tline:
+    if "MULTIPOLE" in line.upper():
+        madxline = multipoles(line)
+        fline.append(madxline)
+    else:
+        fline.append(line)
+        #print "aqui"
+                
+                
+fileo = open(filename+".madx",'w')
+for jline in fline:
+    #multipoles(jline)
+    #for 
+    #hline = jline.split(None)
+    #print len(hline)
+    print >> fileo, '\n'.join(textwrap.wrap(jline,80))
+fileo.close()
