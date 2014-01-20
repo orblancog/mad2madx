@@ -101,10 +101,14 @@ fline = []
 for line in tline:
     if "MULTIPOLE" in line.upper():
         madxline = multipoles(line)
+#        print madxline
         fline.append(madxline)
+    elif "PROFILE" in line.upper():
+        print "  WARNING: profile element",line[:line.index("PROFILE")-2],"changed to marker",line[:line.index("PROFILE")-2]
+        fline.append(line.replace("PROFILE","MARKER"))
+         #print "aqui"
     else:
         fline.append(line)
-        #print "aqui"
                 
                 
 fileo = open(filename+".madx",'w')
