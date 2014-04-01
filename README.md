@@ -2,7 +2,7 @@ Beta release
 
 ++ USE
 
-$ mad2madx madline
+$ ./mad2madx madline
 
 it creates a file "madline.madx"
 
