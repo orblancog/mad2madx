@@ -119,33 +119,48 @@ keeplines = 0
 # do initial syntax changes for the tline
 print "  ...initial syntax translation..."
 for lin in lines:
-    slin = lin.strip(None)
-    if len(slin) != 0:
-        if '!' in slin:
-            #sclin = slin + '\n'
-            tline.append(string.join(slin,''))
+    clin = [] # for lines with comments
+    if len(lin) != 0:
+        if '!' in lin:
+            cnum = lin.index('!') 
+            slin = lin[0:cnum]
+            clin = lin[cnum:]# comment in this line
+#            tline.append(string.join(slin,''))
         else:
-            if slin[-1] == '&':
+            slin = lin.strip(None)
+            #sclin = slin + '\n'
+        if len(slin) != 0:
+            slin = slin.replace(".f.","false")
+            if slin[-1] == '&':# command in multiple lines
                 sslin = slin.strip('&')
                 keeplines = 1
                 auxslin = auxslin + sslin
             else:
                 keeplines = 0
                 auxslin = auxslin + slin
-            if keeplines == 0:
+            if keeplines == 0:# finally print all line
                 #print auxslin
             #else:
-                auxslin = auxslin + ";"
+                auxslin = auxslin + ";" 
+                if len(clin) >= 2:
+                    auxslin = auxslin + "!" + clin[1:]
                 #print len(auxslin)
                 tline.append(string.join(auxslin,''))
                 auxslin = ''
+
                 #keeplines = 0
+        else:
+            tline.append(lin)
 
 # check for non-standard elements and append to fline
 # only MULTIPOLE and PROFILE at the moment
 fline = []
 print "  ...Checking for non-standard elements..." 
 for line in tline:
+    if ("DO" or "ENDDO") in line.upper():
+        print "    WARNING: 'DO' is not a madx command"
+    if ("PUSH" or "ENDPUSH") in line.upper():
+        print "    WARNING: 'PUSH' is not a madx command"
     if "MULTIPOLE" in line.upper():
         madxline = multipoles(line)
 #        print madxline
