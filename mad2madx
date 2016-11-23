@@ -60,19 +60,19 @@ def multipoles(charact):
         if ssline[i] != '':
             
             part  = string.split(ssline[i],'=')
-            
             if not("APERTURE" in part[0]):
-                n = re.sub('\D','',part[0])
+                n = re.sub('\D','',part[0])#order
                 w = re.sub('[^kKtT]','',part[0])
-                # print ssline[0], len(part), w, n, part , part[1]
-
+#                print ssline[0], len(part), w, n, part , part[1].strip("\r\n")
                 if w.upper() == 'K':# magnitude
-                    kl[int(n)] = float(part[1])
+                    part[1]=part[1].strip("\r")
+                    part[1]=part[1].strip("\n")
+                    kl[int(n)] = part[1]
                 if w.upper() == 'T':# angle
                     if part[1] != '':
-                        t[int(n)]  = float(part[1])
+                        t[int(n)]  = part[1]
                     else:
-                        t[int(n)]  = float(pi/(2*int(n)+2))
+                        t[int(n)]  = "twopi/2*1/(2*"+n+"+2))"
                     #print t[int(n)]*180/pi
             else:
                 app = 1
@@ -80,9 +80,9 @@ def multipoles(charact):
                 
     #Calculate components
     for i in range(len(normal)):# normal and skew are the same length always
-	ffactor = i+1 # to get the proper rotation at the ith order
-        normal[i] = cos(t[i]*ffactor)*kl[i]
-        skew[i]   = sin(t[i]*ffactor)*kl[i]
+        ffactor = i+1 # to get the proper rotation at the ith order
+        normal[i] = "cos("+str(t[i])+"*"+str(ffactor)+")*"+str(kl[i])
+        skew[i]   = "sin("+str(t[i])+"*"+str(ffactor)+")*"+str(kl[i])
     #print normal
     #print skew
     #create line
@@ -157,6 +157,12 @@ for lin in lines:
 fline = []
 print "  ...Checking for non-standard elements..." 
 for line in tline:
+    if ("CONSTANT") in line.upper():
+        print "    WARNING: 'CONSTANT' is not a madx command, replacing definition"
+        line =line.upper()
+        line = line.replace('CONSTANT','')
+        line = line.replace(':','')
+        fline.append(line)
     if ("DO" or "ENDDO") in line.upper():
         print "    WARNING: 'DO' is not a madx command"
     if ("PUSH" or "ENDPUSH") in line.upper():
