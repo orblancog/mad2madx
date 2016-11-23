@@ -185,7 +185,12 @@ for jline in fline:
     #for 
     #hline = jline.split(None)
     #print len(hline)
-    print >> fileo, '\n'.join(textwrap.wrap(jline,80))
+    if jline[0] == "!" and len(jline) > 80:
+        print >> fileo, '/*'
+        print >> fileo, '\n'.join(textwrap.wrap(jline,80))
+        print >> fileo, '*/'
+    else:
+        print >> fileo, '\n'.join(textwrap.wrap(jline,80))
 fileo.close()
 print "  Output file:",filename+".madx","created."
 print "  ALL done. Adios !"
